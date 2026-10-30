@@ -1,0 +1,180 @@
+#include "includes.hpp"
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "external/stb_image.h"
+
+int main(int ac, char **av) {
+    if (ac != 2) {
+        std::cerr << "Wrong number of arguments" << std::endl;
+        return 1;
+    }
+
+    std::string filename = av[1];
+    if (!(filename.size() >= 4 && filename.substr(filename.size() - 4) == ".obj")) {
+        std::cerr << "Invalid file format" << std::endl;
+        return 1;
+    }
+
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+        std::cerr << "SDL failed to initialize: " << SDL_GetError() << std::endl;
+        return 1;
+    }
+
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+
+    SDL_Window* window = SDL_CreateWindow(
+        "aule-bre - scop",
+        SDL_WINDOWPOS_CENTERED,
+        SDL_WINDOWPOS_CENTERED,
+        1280, 720,
+        SDL_WINDOW_OPENGL
+    );
+
+    if (!window) {
+        std::cerr << "Window creation failed: " << SDL_GetError() << std::endl;
+        SDL_Quit();
+        return 1;
+    }
+
+    SDL_GLContext glContext = SDL_GL_CreateContext(window);
+    if (!glContext) {
+        std::cerr << "OpenGL context creation failed: " << SDL_GetError() << std::endl;
+        SDL_DestroyWindow(window);
+        SDL_Quit();
+        return 1;
+    }
+
+    int drawW = 1280, drawH = 720;
+    SDL_GL_GetDrawableSize(window, &drawW, &drawH);
+    if (drawW <= 0) drawW = 1280;
+    if (drawH <= 0) drawH = 720;
+    float aspect = (float)drawW / (float)drawH;
+
+    glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
+    glViewport(0, 0, drawW, drawH);
+    glEnable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+
+    Mesh mesh = loadObjFile(filename);
+    setupMeshBuffers(mesh);
+
+    Texture texture;
+    if (!mesh.texturePath.empty())
+        texture.load(mesh.texturePath);
+    else
+        texture.load("image.jpg");
+
+    ShaderManager shaderManager;
+
+    shaderManager.addShader("Simple",
+        "srcs/shader/SimpleVertexShader.vertexshader",
+        "srcs/shader/SimpleFragmentShader.fragmentshader");
+
+    shaderManager.addShader("Black and White",
+        "srcs/shader/BnWVertexShader.vertexshader",
+        "srcs/shader/BnWFragmentShader.fragmentshader");
+
+    shaderManager.addShader("Textured",
+        "srcs/shader/TexturedVertexShader.vertexshader",
+        "srcs/shader/TexturedFragmentShader.fragmentshader");
+
+    GLuint programID    = shaderManager.getCurrent();
+    GLint mvpLocation   = glGetUniformLocation(programID, "MVP");
+    GLint colorLocation = glGetUniformLocation(programID, "objectColor");
+    GLint texLocation   = glGetUniformLocation(programID, "uTexture");
+
+    float radius = 0.5f * std::sqrt(mesh.ext.x*mesh.ext.x +
+                                    mesh.ext.y*mesh.ext.y +
+                                    mesh.ext.z*mesh.ext.z);
+    if (radius < 0.01f) radius = 0.01f;
+
+    const float FOV_DEG = 45.0f;
+    const float MARGIN  = 2.5f;
+    float fovRad   = FOV_DEG * 3.14159265f / 180.0f;
+    float distance = MARGIN * radius / std::tan(fovRad * 0.5f);
+
+    InputState input;
+    input.panSpeed = radius * 0.01f;
+
+    float3 up = { 0.0f, 1.0f, 0.0f };
+
+    std::cout << "Controls:" << std::endl;
+    std::cout << "  Left mouse drag:   Rotate X/Y" << std::endl;
+    std::cout << "  Middle mouse drag: Rotate Z" << std::endl;
+    std::cout << "  Mouse scroll:      Zoom" << std::endl;
+    std::cout << "  Arrow keys:        Pan camera" << std::endl;
+    std::cout << "  O / P:             Move camera forward / backward" << std::endl;
+    std::cout << "  R:                 Toggle auto-rotate (Y axis)" << std::endl;
+    std::cout << "  A: Switch shader" << std::endl;
+    std::cout << "  B: Toggle Bounding Box" << std::endl;
+    std::cout << "  ESC: Quit" << std::endl;
+
+    while (input.running) {
+        handleInput(input, shaderManager);
+
+        if (input.shaderChanged) {
+            programID     = shaderManager.getCurrent();
+            mvpLocation   = glGetUniformLocation(programID, "MVP");
+            colorLocation = glGetUniformLocation(programID, "objectColor");
+            texLocation   = glGetUniformLocation(programID, "uTexture");
+            input.shaderChanged = false;
+        }
+
+        float camDist = distance * input.zoom;
+        float minDist = radius * 1.5f;
+        float maxDist = radius * 50.0f;
+        if (camDist < minDist) camDist = minDist;
+        if (camDist > maxDist) camDist = maxDist;
+
+        float3 cameraTarget = { input.pan.x, input.pan.y, 0.0f };
+        float3 cameraPos    = { input.pan.x, input.pan.y, camDist };
+
+        float nearPlane = camDist - radius * 1.6f;
+        if (nearPlane < 0.01f) nearPlane = 0.01f;
+        float farPlane = camDist + radius * 3.0f;
+        if (farPlane < nearPlane * 10.0f) farPlane = nearPlane * 10.0f;
+
+        Mat4 model = createRotationY(input.angle.y);
+        model = multiplyMat4(createRotationX(input.angle.x), model);
+        model = multiplyMat4(createRotationZ(input.angle.z), model);
+
+        Mat4 view       = createLookAt(cameraPos, cameraTarget, up);
+        Mat4 projection = createPerspective(fovRad, aspect, nearPlane, farPlane);
+
+        Mat4 mv  = multiplyMat4(view, model);
+        Mat4 mvp = multiplyMat4(projection, mv);
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        programID = shaderManager.getCurrent();
+        glUseProgram(programID);
+        glUniformMatrix4fv(mvpLocation, 1, GL_TRUE, &mvp.m[0][0]);
+
+        if (colorLocation != -1)
+            glUniform3f(colorLocation, 1.0f, 0.7f, 0.3f);
+
+        if (texLocation != -1 && texture.isValid()) {
+            texture.bind(0);
+            glUniform1i(texLocation, 0);
+        }
+
+        renderMesh(mesh);
+
+        if (input.boundingBox)
+            draw_bbox(mesh.vertices, model, view, projection, mvpLocation, programID);
+
+        SDL_GL_SwapWindow(window);
+    }
+
+    glDeleteVertexArrays(1, &mesh.VAO);
+    glDeleteBuffers(1, &mesh.VBO);
+    if (mesh.uvVBO)
+        glDeleteBuffers(1, &mesh.uvVBO);
+
+    SDL_GL_DeleteContext(glContext);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
+
+    return 0;
+}

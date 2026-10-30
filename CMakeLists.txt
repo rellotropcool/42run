@@ -48,7 +48,6 @@ add_executable(42run ${PROJECT_SOURCES})
 
 target_include_directories(42run PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
-    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/glm"
     "${CMAKE_CURRENT_SOURCE_DIR}/third_party/stb"
 )
 
