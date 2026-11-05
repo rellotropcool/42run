@@ -17,14 +17,26 @@
 
 background   = #0D0F0D
 foreground   = #18A932
-accent       = #00FF3C
-muted        = #00771B
+accent       = #00E63B
+muted        = #3DAF5A
 danger       = #00FF3C
+
+# --- Menu panel (translucent, scanlines) ---------------------------
+
+panelFill    = #1E4D2E
+panelBorder  = #00FF3C
+panelAlpha   = 0.45
+panelCornerCut  = 20
+
+# --- Background image (optional) -----------------------------------
+
+backgroundImage = textures/background_2.jpg
 
 # --- Font -----------------------------------------------------------
 
 fontName     = Superglue
 fontSize     = 32
+titleSize    = 56
 
 # --- Layout ---------------------------------------------------------
 

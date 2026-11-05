@@ -4,7 +4,6 @@
 #include <string>
 #include <vector>
 
-class Font;
 class Input;
 class Stats;
 class Theme;
@@ -37,7 +36,6 @@ class Menu {
         std::vector<Item> _gameOverItems;
         std::vector<Item> _statsItems;
         int               _selected = 0;
-        float             _elapsed  = 0.0f;
 
     public:
         Menu();
@@ -47,9 +45,9 @@ class Menu {
 
         int   selected() const;
 
-        Action update(float dt, const Input& input);
+        Action update(const Input& input);
 
-        void render(UIRenderer& ui, const Theme& theme, const Font& font,
+        void render(UIRenderer& ui, const Theme& theme,
                     float screenW, float screenH,
                     int distance, const Stats& stats) const;
 

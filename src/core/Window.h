@@ -16,10 +16,10 @@ class Window {
         Window& operator=(const Window&) = delete;
 
         bool shouldClose() const;
+        void close();
         void pollEvents()  const;
         void swapBuffers() const;
         void clear()       const;
-        void close();
 
         GLFWwindow* handle() const;
         int         width()  const;

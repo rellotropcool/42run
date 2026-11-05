@@ -16,7 +16,7 @@ jumpVelocity    = 7.0
 gravity         = 20.0
 laneLerpSpeed   = 12.0
 laneWidth       = 2.0
-slideDuration   = 0.3
+slideDuration   = 0.5
 
 # --- Obstacle spawning ----------------------------------------------
 

@@ -13,6 +13,7 @@
 #include "gfx/Camera.h"
 #include "gfx/Font.h"
 #include "gfx/Shader.h"
+#include "gfx/Texture.h"
 #include "math/Mat4.h"
 #include "math/Vec3.h"
 #include "ui/Menu.h"
@@ -33,11 +34,15 @@ class Application {
         Theme               _theme;
         Stats               _stats;
         Font                _font;
+        Font                _titleFont;
+        Texture             _backgroundTexture;
+        bool                _hasBackground = false;
         Player              _player;
         ObstacleSpawner     _obstacles;
         Menu                _menu;
         UIRenderer          _ui;
         std::vector<Entity> _entities;
+        float               _elapsed = 0.0f;
 
     public:
         Application(const GameRules& rules, const Theme& theme);

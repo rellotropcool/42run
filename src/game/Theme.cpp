@@ -1,6 +1,7 @@
 #include "game/Theme.h"
 
 #include <fstream>
+#include <iostream>
 #include <sstream>
 #include <stdexcept>
 
@@ -105,8 +106,10 @@ Theme Theme::load(const std::string& path) {
     Theme theme;
 
     std::ifstream file(path);
-    if (!file.is_open())
-        throw std::runtime_error("Theme: cannot open " + path);
+    if (!file.is_open()) {
+        std::cerr << "Theme: " << path << " not found, using defaults\n";
+        return theme;
+    }
 
     std::string line;
     int         lineNum = 0;
@@ -139,8 +142,14 @@ Theme Theme::load(const std::string& path) {
         else if (key == "accent")          theme._accent          = parseHexColor(valueStr, key, lineNum);
         else if (key == "muted")           theme._muted           = parseHexColor(valueStr, key, lineNum);
         else if (key == "danger")          theme._danger          = parseHexColor(valueStr, key, lineNum);
+        else if (key == "panelFill")       theme._panelFill       = parseHexColor(valueStr, key, lineNum);
+        else if (key == "panelBorder")     theme._panelBorder     = parseHexColor(valueStr, key, lineNum);
+        else if (key == "panelAlpha")      theme._panelAlpha      = parseFloat(valueStr, key, lineNum);
+        else if (key == "panelCornerCut")  theme._panelCornerCut  = parseFloat(valueStr, key, lineNum);
+        else if (key == "backgroundImage") theme._backgroundImage = valueStr;
         else if (key == "fontName")        theme._fontName        = valueStr;
         else if (key == "fontSize")        theme._fontSize        = parseInt(valueStr, key, lineNum);
+        else if (key == "titleSize")       theme._titleSize       = parseInt(valueStr, key, lineNum);
         else if (key == "menuItemSpacing") theme._menuItemSpacing = parseFloat(valueStr, key, lineNum);
         else if (key == "menuItemPadding") theme._menuItemPadding = parseFloat(valueStr, key, lineNum);
         else
@@ -156,9 +165,15 @@ const Vec3& Theme::foreground() const { return _foreground; }
 const Vec3& Theme::accent()     const { return _accent; }
 const Vec3& Theme::muted()      const { return _muted; }
 const Vec3& Theme::danger()     const { return _danger; }
+const Vec3& Theme::panelFill()   const { return _panelFill; }
+const Vec3& Theme::panelBorder() const { return _panelBorder; }
+float       Theme::panelAlpha()  const { return _panelAlpha; }
+float       Theme::panelCornerCut() const { return _panelCornerCut; }
 
 const std::string& Theme::fontName()        const { return _fontName; }
+const std::string& Theme::backgroundImage() const { return _backgroundImage; }
 int                Theme::fontSize()        const { return _fontSize; }
+int                Theme::titleSize()       const { return _titleSize; }
 float              Theme::menuItemSpacing() const { return _menuItemSpacing; }
 float              Theme::menuItemPadding() const { return _menuItemPadding; }
 
@@ -177,4 +192,16 @@ std::string Theme::resolveFontPath() const {
 
     throw std::runtime_error("Theme: font '" + _fontName +
                              "' not found in assets/fonts/ (tried .otf and .ttf)");
+}
+
+std::string Theme::resolveBackgroundPath() const {
+    if (_backgroundImage.empty())
+        return "";
+
+    std::string path = "assets/" + _backgroundImage;
+    std::ifstream probe(path);
+    if (!probe.good())
+        throw std::runtime_error("Theme: background '" + _backgroundImage +
+                                 "' not found (expected at " + path + ")");
+    return path;
 }

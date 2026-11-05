@@ -14,6 +14,8 @@ Window::Window(int width, int height, const char* title)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_SAMPLES, 4);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 #ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
 #endif
@@ -33,7 +35,6 @@ Window::Window(int width, int height, const char* title)
     }
 
     glfwSwapInterval(1);
-
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 }
 
@@ -43,9 +44,9 @@ Window::~Window() {
 }
 
 bool Window::shouldClose() const { return glfwWindowShouldClose(_handle); }
+void Window::close()             { glfwSetWindowShouldClose(_handle, GLFW_TRUE); }
 void Window::pollEvents()  const { glfwPollEvents(); }
 void Window::swapBuffers() const { glfwSwapBuffers(_handle); }
-void Window::close() { glfwSetWindowShouldClose(_handle, GLFW_TRUE); }
 
 void Window::clear() const {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

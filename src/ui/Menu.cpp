@@ -3,10 +3,11 @@
 #include "core/Input.h"
 #include "game/Stats.h"
 #include "game/Theme.h"
-#include "gfx/Font.h"
 #include "ui/UIRenderer.h"
 
 #include <GLFW/glfw3.h>
+
+#include <algorithm>
 
 Menu::Menu() {
     _mainItems = {
@@ -29,14 +30,11 @@ Menu::State Menu::state() const { return _state; }
 void Menu::setState(State state) {
     _state    = state;
     _selected = 0;
-    _elapsed  = 0.0f;
 }
 
 int Menu::selected() const { return _selected; }
 
-Menu::Action Menu::update(float dt, const Input& input) {
-    _elapsed += dt;
-
+Menu::Action Menu::update(const Input& input) {
     if (_state == State::Playing)
         return Action::None;
 
@@ -80,42 +78,74 @@ std::string Menu::titleFor(State state) const {
     return "";
 }
 
-void Menu::render(UIRenderer& ui, const Theme& theme, const Font& font,
+void Menu::render(UIRenderer& ui, const Theme& theme,
                   float screenW, float screenH,
                   int distance, const Stats& stats) const {
-    float cx = screenW * 0.5f;
+    float cx       = screenW * 0.5f;
+    float padding  = theme.menuItemPadding();
+    float spacing  = theme.menuItemSpacing();
+    float titleH   = static_cast<float>(theme.titleSize());
+    float fontSize = static_cast<float>(theme.fontSize());
+    float infoLH   = fontSize * 1.4f;
+    float itemLH   = fontSize * 1.4f;
+    float gap      = spacing * 4.0f;
 
-    ui.drawTextCentered(titleFor(_state), cx, 100.0f, theme.accent());
+    std::string title = titleFor(_state);
 
-    float itemY = 320.0f;
-    float lineH = font.lineHeight() + theme.menuItemSpacing();
-
+    std::vector<std::string> infoTexts;
     if (_state == State::GameOver) {
-        ui.drawTextCentered("Distance: " + std::to_string(distance),
-                            cx, 220.0f, theme.muted());
-        ui.drawTextCentered("Best: " + std::to_string(stats.bestDistance()),
-                            cx, 220.0f + font.lineHeight(), theme.muted());
-    }
-
-    if (_state == State::Stats) {
-        ui.drawTextCentered("Games played: " + std::to_string(stats.gamesPlayed()),
-                            cx, 220.0f, theme.foreground());
-        ui.drawTextCentered("Best distance: " + std::to_string(stats.bestDistance()),
-                            cx, 220.0f + font.lineHeight(), theme.foreground());
-        ui.drawTextCentered("Total distance: " + std::to_string(stats.totalDistance()),
-                            cx, 220.0f + font.lineHeight() * 2.0f, theme.foreground());
+        infoTexts.push_back("Distance: " + std::to_string(distance));
+        infoTexts.push_back("Best: " + std::to_string(stats.bestDistance()));
+    } else if (_state == State::Stats) {
+        infoTexts.push_back("Games played: " + std::to_string(stats.gamesPlayed()));
+        infoTexts.push_back("Best distance: " + std::to_string(stats.bestDistance()));
+        infoTexts.push_back("Total distance: " + std::to_string(stats.totalDistance()));
     }
 
     const std::vector<Item>& items = itemsFor(_state);
+    int infoCount = static_cast<int>(infoTexts.size());
+    int itemCount = static_cast<int>(items.size());
 
-    for (std::size_t i = 0; i < items.size(); ++i) {
-        Vec3 color = (static_cast<int>(i) == _selected)
-                     ? theme.accent()
-                     : theme.foreground();
-        ui.drawTextCentered(items[i]._label, cx, itemY, color);
-        itemY += lineH;
+    float contentH = titleH;
+    if (infoCount > 0) contentH += gap + static_cast<float>(infoCount) * infoLH;
+    if (itemCount > 0) contentH += gap + static_cast<float>(itemCount) * itemLH;
+
+    float panelH = contentH + padding * 2.0f;
+
+    float maxW = ui.measureTitle(title);
+    for (const auto& t : infoTexts)
+        maxW = std::max(maxW, ui.measureText(t));
+    for (const auto& item : items)
+        maxW = std::max(maxW, ui.measureText(item._label));
+
+    float panelW = maxW + padding * 4.0f;
+    float panelX = (screenW - panelW) * 0.5f;
+    float panelY = (screenH - panelH) * 0.5f;
+
+    ui.drawPanel(panelX, panelY, panelW, panelH,
+                 theme.panelFill(), theme.panelAlpha(),
+                 theme.panelBorder(), 2.0f,
+                 theme.panelCornerCut());
+
+    float cursorY = panelY + padding;
+
+    ui.drawTitleCentered(title, cx, cursorY, theme.accent());
+    cursorY += titleH + gap;
+
+    for (const auto& t : infoTexts) {
+        Vec3 color = (_state == State::GameOver) ? theme.muted() : theme.foreground();
+        ui.drawTextCentered(t, cx, cursorY, color);
+        cursorY += infoLH;
+    }
+    if (infoCount > 0) cursorY += gap;
+
+    for (int i = 0; i < itemCount; ++i) {
+        Vec3 color = (i == _selected) ? theme.accent() : theme.foreground();
+        ui.drawTextCentered(items[i]._label, cx, cursorY, color);
+        cursorY += itemLH;
     }
 
-    ui.drawTextCentered("UP/DOWN to select  -  ENTER to confirm",
-                        cx, screenH - 60.0f, theme.muted());
+    if (ui.hintVisible())
+        ui.drawTextCentered("UP/DOWN to select  -  ENTER to confirm",
+                            cx, screenH - padding * 2.5f, theme.muted());
 }

@@ -1,5 +1,6 @@
 #include "core/Application.h"
 
+#include "gfx/Image.h"
 #include "gfx/Mesh.h"
 #include "math/Transform.h"
 
@@ -28,11 +29,21 @@ Application::Application(const GameRules& rules, const Theme& theme)
     , _theme(theme)
     , _stats(Stats::load("save/stats.txt"))
     , _font(_theme.resolveFontPath(), _theme.fontSize())
-    , _ui(_font)
+    , _titleFont(_theme.resolveFontPath(), _theme.titleSize())
+    , _ui(_font, _titleFont)
 {
     glViewport(0, 0, _window.width(), _window.height());
     glEnable(GL_DEPTH_TEST);
     _player.setRules(_rules);
+
+    if (!_theme.backgroundImage().empty()) {
+        std::string path = _theme.resolveBackgroundPath();
+        ImageData   img  = Image::load(path);
+        _backgroundTexture.setData(img.width, img.height,
+                                   GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
+                                   img.pixels.data());
+        _hasBackground = true;
+    }
 }
 
 void Application::setPlayerMesh(Mesh& mesh) {
@@ -62,6 +73,7 @@ int Application::run() {
         float now = std::chrono::duration<float>(clock::now() - start).count();
         float dt  = now - prev;
         prev      = now;
+        _elapsed += dt;
 
         update(dt);
         render();
@@ -86,7 +98,7 @@ void Application::update(float dt) {
         return;
     }
 
-    Menu::Action action = _menu.update(dt, _input);
+    Menu::Action action = _menu.update(_input);
 
     switch (action) {
         case Menu::Action::Play:
@@ -206,16 +218,20 @@ void Application::render() {
     float w = static_cast<float>(_window.width());
     float h = static_cast<float>(_window.height());
 
-    _ui.beginFrame(w, h);
+    _ui.beginFrame(w, h, _elapsed);
 
     if (_menu.state() == Menu::State::Playing) {
         std::string score = std::to_string(static_cast<int>(_player.distance()));
         _ui.drawText(score, 20.0f, 20.0f, _theme.foreground());
     } else {
-        if (!showWorld)
-            _ui.drawRect(0.0f, 0.0f, w, h, _theme.background());
+        if (!showWorld) {
+            if (_hasBackground)
+                _ui.drawBackground(_backgroundTexture);
+            else
+                _ui.drawRect(0.0f, 0.0f, w, h, _theme.background());
+        }
 
-        _menu.render(_ui, _theme, _font, w, h,
+        _menu.render(_ui, _theme, w, h,
                      static_cast<int>(_player.distance()), _stats);
     }
 
