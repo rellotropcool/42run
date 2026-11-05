@@ -85,3 +85,7 @@ void VertexArray::drawIndexed(GLsizei indexCount) const {
 }
 
 GLuint VertexArray::id() const { return _id; }
+
+void VertexArray::drawArrays(GLsizei vertexCount) const {
+    glDrawArrays(GL_TRIANGLES, 0, vertexCount);
+}

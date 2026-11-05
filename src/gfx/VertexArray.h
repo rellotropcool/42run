@@ -60,6 +60,7 @@ class VertexArray {
         void unbind() const;
 
         void drawIndexed(GLsizei indexCount) const;
+        void drawArrays (GLsizei vertexCount) const;
 
         GLuint id() const;
 };

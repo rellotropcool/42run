@@ -8,6 +8,8 @@
 
 #include "math/Mat4.h"
 #include "math/Vec3.h"
+#include "math/Vec2.h"
+
 
 class Shader {
     private:
@@ -26,6 +28,7 @@ class Shader {
         void setBool (const std::string& name, bool value);
         void setInt  (const std::string& name, int value);
         void setFloat(const std::string& name, float value);
+        void setVec2 (const std::string& name, const Vec2& value);
         void setVec3 (const std::string& name, const Vec3& value);
         void setMat4 (const std::string& name, const Mat4& value);
 

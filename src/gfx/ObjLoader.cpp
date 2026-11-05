@@ -142,10 +142,15 @@ ObjLoader::Result ObjLoader::load(const std::string& path) {
 
                 Vertex vertex;
                 vertex.position = positions[key.vertex - 1];
-                vertex.uv       = (key.texCoord != 0) ? texCoords[key.texCoord - 1]
-                                                      : Vec2(0.0f, 0.0f);
-                vertex.normal   = (key.normal   != 0) ? normals[key.normal - 1]
-                                                      : Vec3(0.0f);
+                if (key.texCoord != 0)
+                    vertex.uv = texCoords[key.texCoord - 1];
+                else
+                    vertex.uv = Vec2(0.0f, 0.0f);
+
+                if (key.normal != 0)
+                    vertex.normal = normals[key.normal - 1];
+                else
+                    vertex.normal = Vec3(0.0f);
 
                 std::uint32_t index = static_cast<std::uint32_t>(result.vertices.size());
                 result.vertices.push_back(vertex);

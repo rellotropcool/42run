@@ -53,18 +53,22 @@ Mat4 Transform::lookAt(const Vec3& eye, const Vec3& center, const Vec3& up) {
     Vec3 u = s.cross(f);
 
     Mat4 result = Mat4::identity();
+
     result.at(0, 0) =  s.x();
-    result.at(0, 1) =  s.y();
-    result.at(0, 2) =  s.z();
-    result.at(0, 3) = -s.dot(eye);
-    result.at(1, 0) =  u.x();
+    result.at(1, 0) =  s.y();
+    result.at(2, 0) =  s.z();
+    result.at(3, 0) = -s.dot(eye);
+
+    result.at(0, 1) =  u.x();
     result.at(1, 1) =  u.y();
-    result.at(1, 2) =  u.z();
-    result.at(1, 3) = -u.dot(eye);
-    result.at(2, 0) = -f.x();
-    result.at(2, 1) = -f.y();
+    result.at(2, 1) =  u.z();
+    result.at(3, 1) = -u.dot(eye);
+
+    result.at(0, 2) = -f.x();
+    result.at(1, 2) = -f.y();
     result.at(2, 2) = -f.z();
-    result.at(2, 3) =  f.dot(eye);
+    result.at(3, 2) =  f.dot(eye);
+
     return result;
 }
 

@@ -1,0 +1,24 @@
+# =============================================================================
+#  GAME RULES
+# =============================================================================
+#
+#  Format:   <key> = <value>
+#
+#  Comments start with '#'. Blank lines are ignored.
+#  Unknown keys raise an error — typos are caught at startup.
+#
+# =============================================================================
+
+# --- Player movement ------------------------------------------------
+
+forwardSpeed    = 16.0
+jumpVelocity    = 7.0
+gravity         = 20.0
+laneLerpSpeed   = 12.0
+laneWidth       = 2.0
+slideDuration   = 0.5
+
+# --- Obstacle spawning ----------------------------------------------
+
+warmupDistance  = 30.0
+slotSpacing     = 8.0

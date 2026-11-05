@@ -45,6 +45,7 @@ Window::~Window() {
 bool Window::shouldClose() const { return glfwWindowShouldClose(_handle); }
 void Window::pollEvents()  const { glfwPollEvents(); }
 void Window::swapBuffers() const { glfwSwapBuffers(_handle); }
+void Window::close() { glfwSetWindowShouldClose(_handle, GLFW_TRUE); }
 
 void Window::clear() const {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

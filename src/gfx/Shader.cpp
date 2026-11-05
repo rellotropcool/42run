@@ -75,7 +75,10 @@ void Shader::unbind() const {
 }
 
 void Shader::setBool(const std::string& name, bool value) {
-    glUniform1i(uniformLocation(name), value ? 1 : 0);
+    int intValue = 0;
+    if (value)
+        intValue = 1;
+    glUniform1i(uniformLocation(name), intValue);
 }
 
 void Shader::setInt(const std::string& name, int value) {
@@ -84,6 +87,10 @@ void Shader::setInt(const std::string& name, int value) {
 
 void Shader::setFloat(const std::string& name, float value) {
     glUniform1f(uniformLocation(name), value);
+}
+
+void Shader::setVec2(const std::string& name, const Vec2& value) {
+    glUniform2f(uniformLocation(name), value.x(), value.y());
 }
 
 void Shader::setVec3(const std::string& name, const Vec3& value) {
