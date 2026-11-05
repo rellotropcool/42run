@@ -8,10 +8,14 @@
 #include "game/Ground.h"
 #include "game/ObstacleSpawner.h"
 #include "game/Player.h"
+#include "game/Stats.h"
+#include "game/Theme.h"
 #include "gfx/Camera.h"
+#include "gfx/Font.h"
 #include "gfx/Shader.h"
 #include "math/Mat4.h"
 #include "math/Vec3.h"
+#include "ui/Menu.h"
 #include "ui/UIRenderer.h"
 
 #include <vector>
@@ -26,14 +30,17 @@ class Application {
         Ground              _ground;
         Camera              _camera;
         GameRules           _rules;
+        Theme               _theme;
+        Stats               _stats;
+        Font                _font;
         Player              _player;
         ObstacleSpawner     _obstacles;
+        Menu                _menu;
         UIRenderer          _ui;
         std::vector<Entity> _entities;
-        bool                _dead = false;
 
     public:
-        explicit Application(const GameRules& rules);
+        Application(const GameRules& rules, const Theme& theme);
         ~Application() = default;
 
         Application(const Application&)            = delete;
@@ -49,6 +56,7 @@ class Application {
     private:
         void update(float dt);
         void render();
+        void resetWorld();
         void drawEntity(const Entity& entity, const Mat4& viewProj);
         bool collides(const Player& player, const Obstacle& obs) const;
 };

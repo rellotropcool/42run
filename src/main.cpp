@@ -1,6 +1,7 @@
 #include "core/Application.h"
 
 #include "game/GameRules.h"
+#include "game/Theme.h"
 #include "gfx/Mesh.h"
 #include "gfx/ObjLoader.h"
 #include "gfx/VertexArray.h"
@@ -11,10 +12,11 @@
 int main() {
     try {
         GameRules rules = GameRules::load("assets/config/gamerules.txt");
+        Theme     theme = Theme::load("save/theme.txt");
 
         ObjLoader::Result obj = ObjLoader::load("assets/models/cube.obj");
 
-        Application app(rules);
+        Application app(rules, theme);
 
         Mesh playerMesh(obj.vertices.data(), obj.vertices.size() * sizeof(Vertex),
                         obj.indices.data(),  obj.indices.size(),

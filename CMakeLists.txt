@@ -64,5 +64,11 @@ add_custom_command(TARGET 42run POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${CMAKE_CURRENT_SOURCE_DIR}/shaders"
         "$<TARGET_FILE_DIR:42run>/shaders"
-    COMMENT "Copying shaders/ to build output"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets"
+        "$<TARGET_FILE_DIR:42run>/assets"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_CURRENT_SOURCE_DIR}/save"
+        "$<TARGET_FILE_DIR:42run>/save"
+    COMMENT "Copying shaders/, assets/ and save/ to build output"
 )

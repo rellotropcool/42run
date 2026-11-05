@@ -1,0 +1,32 @@
+# =============================================================================
+#  THEME
+# =============================================================================
+#
+#  Format:   <key> = <value>
+#
+#  Colors:   #RRGGBB (hex, 0-255 per channel)
+#  Font:     name without extension — resolved against assets/fonts/
+#  Sizes:    pixels
+#
+#  Comments start with '#'. Blank lines are ignored.
+#  Unknown keys raise an error — typos are caught at startup.
+#
+# =============================================================================
+
+# --- Colors (neon terminal palette) ---------------------------------
+
+background   = #0D0F0D
+foreground   = #18A932
+accent       = #00FF3C
+muted        = #00771B
+danger       = #00FF3C
+
+# --- Font -----------------------------------------------------------
+
+fontName     = Superglue
+fontSize     = 32
+
+# --- Layout ---------------------------------------------------------
+
+menuItemSpacing = 12
+menuItemPadding = 24
