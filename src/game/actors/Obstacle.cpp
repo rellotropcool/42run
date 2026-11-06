@@ -1,4 +1,4 @@
-#include "game/Obstacle.h"
+#include "game/actors/Obstacle.h"
 
 Obstacle::Obstacle(Mesh& mesh, const Vec3& position,
                    const Vec3& scale, ObstacleType type)

@@ -1,6 +1,6 @@
-#include "game/ObstacleSpawner.h"
+#include "game/spawn/ObstacleSpawner.h"
 
-#include "game/GameRules.h"
+#include "game/state/GameRules.h"
 #include "gfx/Mesh.h"
 #include "math/Vec3.h"
 
@@ -24,15 +24,6 @@ std::string trim(const std::string& s) {
     return s.substr(a, b - a + 1);
 }
 
-ObstacleType parseType(const std::string& s, int lineNum) {
-    if (s == "f") return ObstacleType::Full;
-    if (s == "s") return ObstacleType::Semi;
-    if (s == "t") return ObstacleType::Top;
-    throw std::runtime_error(
-        "ObstacleSpawner: type must be 'f', 's' or 't' on line " +
-        std::to_string(lineNum) + ", got '" + s + "'");
-}
-
 int parseInt(const std::string& s, const std::string& what, int lineNum) {
     try {
         return std::stoi(s);
@@ -43,6 +34,13 @@ int parseInt(const std::string& s, const std::string& what, int lineNum) {
     }
 }
 
+bool parseObstacleType(const std::string& s, ObstacleType& out) {
+    if (s == "f") { out = ObstacleType::Full;  return true; }
+    if (s == "s") { out = ObstacleType::Semi;  return true; }
+    if (s == "t") { out = ObstacleType::Top;   return true; }
+    return false;
+}
+
 }
 
 void ObstacleSpawner::load(Mesh& mesh, const std::string& chunksPath,
@@ -50,6 +48,7 @@ void ObstacleSpawner::load(Mesh& mesh, const std::string& chunksPath,
     _mesh    = &mesh;
     _rules   = &rules;
     _chunks.clear();
+    _obstacles.clear();
     _cursorZ = -_rules->warmupDistance();
 
     std::ifstream file(chunksPath);
@@ -116,8 +115,16 @@ void ObstacleSpawner::load(Mesh& mesh, const std::string& chunksPath,
 
                 Placement p;
                 p.lane  = parseInt(fields[0], "lane",  lineNum);
-                p.type  = parseType(fields[1],         lineNum);
                 p.zSlot = parseInt(fields[2], "zSlot", lineNum);
+
+                ObstacleType obs;
+                if (!parseObstacleType(fields[1], obs)) {
+                    throw std::runtime_error(
+                        "ObstacleSpawner: unknown type '" + fields[1] +
+                        "' on line " + std::to_string(lineNum) +
+                        " (valid: f, s, t)");
+                }
+                p.obsType = obs;
 
                 if (p.lane < 0 || p.lane > 2)
                     throw std::runtime_error(
@@ -173,17 +180,14 @@ void ObstacleSpawner::spawnChunk(const Chunk& chunk) {
     constexpr float topBottomY =  0.4f;
 
     for (const Placement& p : chunk.placements) {
-        float h       = Obstacle::heightFor(p.type);
-        float bottomY = (p.type == ObstacleType::Top) ? topBottomY : groundY;
-        float x       = static_cast<float>(p.lane - 1) * _rules->laneWidth();
-        float y       = bottomY + h * 0.5f;
+        float laneX   = static_cast<float>(p.lane - 1) * _rules->laneWidth();
         float z       = _cursorZ - static_cast<float>(p.zSlot) * _rules->slotSpacing();
+        float h       = Obstacle::heightFor(p.obsType);
+        float bottomY = (p.obsType == ObstacleType::Top) ? topBottomY : groundY;
+        float y       = bottomY + h * 0.5f;
 
-        _obstacles.emplace_back(
-            *_mesh,
-            Vec3(x, y, z),
-            Vec3(0.8f, h, 0.8f),
-            p.type);
+        _obstacles.emplace_back(*_mesh, Vec3(laneX, y, z),
+                                Vec3(0.8f, h, 0.8f), p.obsType);
     }
 
     _cursorZ -= static_cast<float>(chunk.lengthInSlots) * _rules->slotSpacing();
@@ -203,4 +207,9 @@ void ObstacleSpawner::prune(float playerZ) {
 
 const std::vector<Obstacle>& ObstacleSpawner::obstacles() const {
     return _obstacles;
+}
+
+void ObstacleSpawner::removeObstacle(std::size_t index) {
+    if (index < _obstacles.size())
+        _obstacles.erase(_obstacles.begin() + static_cast<std::ptrdiff_t>(index));
 }

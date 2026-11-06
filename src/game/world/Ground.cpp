@@ -1,4 +1,4 @@
-#include "game/Ground.h"
+#include "game/world/Ground.h"
 
 #include "gfx/VertexArray.h"
 #include "math/Transform.h"

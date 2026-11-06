@@ -10,11 +10,15 @@
 #  lane  = 0 (left), 1 (middle), 2 (right)
 #  type  = f  full block  — must dodge, too tall to jump
 #          s  semi block  — can dodge OR jump over
-#          t  top block   — must slide under (hangs above)
+#          t  top block   — must slide under
 #  zSlot = forward offset within this chunk (0, 1, 2, ...)
 #
 #  Chunk length = highest zSlot + 1.
 #  Duplicate a line to weight it more heavily.
+#
+#  Coins are NOT placed here — CoinSpawner streams them independently.
+#  Powerups are NOT placed here — PowerupSpawner spawns them periodically.
+#  This file is obstacles only.
 #
 # =============================================================================
 
@@ -42,18 +46,18 @@
 0,t,0 2,t,0
 0,t,0 1,t,0 2,t,0
 
-# --- Full + semi mixed (dodge, then jump) ---------------------------
+# --- Full + semi mixed ----------------------------------------------
 
 1,f,0 1,s,2
 0,f,0 1,s,2
 
-# --- Semi + top same lane (jump, then slide) ------------------------
+# --- Semi + top same lane -------------------------------------------
 
 2,s,0 2,t,2
 0,s,0 0,t,2
 1,s,0 1,t,2
 
-# --- Sequences (multi-slot) -----------------------------------------
+# --- Sequences ------------------------------------------------------
 
 1,f,0 1,f,2
 0,f,0 2,f,2

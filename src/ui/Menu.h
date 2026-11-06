@@ -16,6 +16,8 @@ class Menu {
             Playing,
             Stats,
             GameOver,
+            Paused,
+            Shop,
         };
         enum class Action {
             None,
@@ -23,6 +25,8 @@ class Menu {
             Stats,
             Back,
             Quit,
+            Resume,
+            OpenShop,
         };
 
     private:
@@ -35,6 +39,7 @@ class Menu {
         std::vector<Item> _mainItems;
         std::vector<Item> _gameOverItems;
         std::vector<Item> _statsItems;
+        std::vector<Item> _pausedItems;
         int               _selected = 0;
 
     public:
@@ -49,7 +54,8 @@ class Menu {
 
         void render(UIRenderer& ui, const Theme& theme,
                     float screenW, float screenH,
-                    int distance, const Stats& stats) const;
+                    int distance, int coins,
+                    const Stats& stats, bool newRecord) const;
 
     private:
         const std::vector<Item>& itemsFor(State state) const;

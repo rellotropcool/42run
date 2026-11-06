@@ -1,4 +1,4 @@
-#include "game/Stats.h"
+#include "game/state/Stats.h"
 
 #include <fstream>
 #include <sstream>
@@ -63,6 +63,7 @@ Stats Stats::load(const std::string& path) {
         if      (key == "gamesPlayed")   stats._gamesPlayed   = value;
         else if (key == "bestDistance")  stats._bestDistance  = value;
         else if (key == "totalDistance") stats._totalDistance = value;
+        else if (key == "totalCoins")    stats._totalCoins    = value;
         else
             throw std::runtime_error("Stats: unknown key '" + key +
                                      "' on line " + std::to_string(lineNum));
@@ -71,12 +72,13 @@ Stats Stats::load(const std::string& path) {
     return stats;
 }
 
-void Stats::recordGame(int distance) {
-    if (distance < 0)
-        distance = 0;
+void Stats::recordGame(int distance, int coins) {
+    if (distance < 0) distance = 0;
+    if (coins    < 0) coins    = 0;
 
     ++_gamesPlayed;
     _totalDistance += distance;
+    _totalCoins    += coins;
     if (distance > _bestDistance)
         _bestDistance = distance;
 }
@@ -89,8 +91,10 @@ void Stats::save(const std::string& path) const {
     file << "gamesPlayed   = " << _gamesPlayed   << "\n";
     file << "bestDistance  = " << _bestDistance  << "\n";
     file << "totalDistance = " << _totalDistance << "\n";
+    file << "totalCoins    = " << _totalCoins    << "\n";
 }
 
 int Stats::gamesPlayed()   const { return _gamesPlayed; }
 int Stats::bestDistance()  const { return _bestDistance; }
 int Stats::totalDistance() const { return _totalDistance; }
+int Stats::totalCoins()    const { return _totalCoins; }

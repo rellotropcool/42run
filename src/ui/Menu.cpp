@@ -1,27 +1,35 @@
 #include "ui/Menu.h"
 
 #include "core/Input.h"
-#include "game/Stats.h"
-#include "game/Theme.h"
+#include "game/state/Stats.h"
+#include "game/state/Theme.h"
 #include "ui/UIRenderer.h"
 
 #include <GLFW/glfw3.h>
 
 #include <algorithm>
+#include <utility>
 
 Menu::Menu() {
     _mainItems = {
-        { "Play",       Action::Play  },
-        { "Statistics", Action::Stats },
-        { "Quit",       Action::Quit  },
+        { "Play",       Action::Play     },
+        { "Shop",       Action::OpenShop },
+        { "Statistics", Action::Stats    },
+        { "Quit",       Action::Quit     },
     };
     _gameOverItems = {
-        { "Retry",      Action::Play  },
-        { "Statistics", Action::Stats },
-        { "Main Menu",  Action::Back  },
+        { "Retry",      Action::Play     },
+        { "Statistics", Action::Stats    },
+        { "Main Menu",  Action::Back     },
     };
     _statsItems = {
-        { "Back",       Action::Back  },
+        { "Back",       Action::Back     },
+    };
+    _pausedItems = {
+        { "Resume",     Action::Resume   },
+        { "Restart",    Action::Play     },
+        { "Main Menu",  Action::Back     },
+        { "Quit",       Action::Quit     },
     };
 }
 
@@ -35,7 +43,7 @@ void Menu::setState(State state) {
 int Menu::selected() const { return _selected; }
 
 Menu::Action Menu::update(const Input& input) {
-    if (_state == State::Playing)
+    if (_state == State::Playing || _state == State::Shop)
         return Action::None;
 
     const std::vector<Item>& items = itemsFor(_state);
@@ -63,7 +71,9 @@ const std::vector<Menu::Item>& Menu::itemsFor(State state) const {
         case State::Main:     return _mainItems;
         case State::GameOver: return _gameOverItems;
         case State::Stats:    return _statsItems;
+        case State::Paused:   return _pausedItems;
         case State::Playing:  return empty;
+        case State::Shop:     return empty;
     }
     return empty;
 }
@@ -73,14 +83,17 @@ std::string Menu::titleFor(State state) const {
         case State::Main:     return "42RUN";
         case State::Stats:    return "STATISTICS";
         case State::GameOver: return "GAME OVER";
+        case State::Paused:   return "PAUSED";
         case State::Playing:  return "";
+        case State::Shop:     return "";
     }
     return "";
 }
 
 void Menu::render(UIRenderer& ui, const Theme& theme,
                   float screenW, float screenH,
-                  int distance, const Stats& stats) const {
+                  int distance, int coins,
+                  const Stats& stats, bool newRecord) const {
     float cx       = screenW * 0.5f;
     float padding  = theme.menuItemPadding();
     float spacing  = theme.menuItemSpacing();
@@ -92,14 +105,28 @@ void Menu::render(UIRenderer& ui, const Theme& theme,
 
     std::string title = titleFor(_state);
 
-    std::vector<std::string> infoTexts;
+    std::vector<std::pair<std::string, Vec3>> infoTexts;
     if (_state == State::GameOver) {
-        infoTexts.push_back("Distance: " + std::to_string(distance));
-        infoTexts.push_back("Best: " + std::to_string(stats.bestDistance()));
+        infoTexts.push_back({ "Distance: " + std::to_string(distance),
+                              theme.muted() });
+        infoTexts.push_back({ "Coins: " + std::to_string(coins),
+                              theme.accent() });
+        infoTexts.push_back({ "Best: " + std::to_string(stats.bestDistance()),
+                              theme.muted() });
+        if (newRecord)
+            infoTexts.push_back({ "NEW RECORD!", theme.accent() });
     } else if (_state == State::Stats) {
-        infoTexts.push_back("Games played: " + std::to_string(stats.gamesPlayed()));
-        infoTexts.push_back("Best distance: " + std::to_string(stats.bestDistance()));
-        infoTexts.push_back("Total distance: " + std::to_string(stats.totalDistance()));
+        infoTexts.push_back({ "Games played: " + std::to_string(stats.gamesPlayed()),
+                              theme.foreground() });
+        infoTexts.push_back({ "Best distance: " + std::to_string(stats.bestDistance()),
+                              theme.foreground() });
+        infoTexts.push_back({ "Total distance: " + std::to_string(stats.totalDistance()),
+                              theme.foreground() });
+    } else if (_state == State::Paused) {
+        infoTexts.push_back({ "Distance: " + std::to_string(distance),
+                              theme.muted() });
+        infoTexts.push_back({ "Coins: " + std::to_string(coins),
+                              theme.accent() });
     }
 
     const std::vector<Item>& items = itemsFor(_state);
@@ -113,8 +140,8 @@ void Menu::render(UIRenderer& ui, const Theme& theme,
     float panelH = contentH + padding * 2.0f;
 
     float maxW = ui.measureTitle(title);
-    for (const auto& t : infoTexts)
-        maxW = std::max(maxW, ui.measureText(t));
+    for (const auto& entry : infoTexts)
+        maxW = std::max(maxW, ui.measureText(entry.first));
     for (const auto& item : items)
         maxW = std::max(maxW, ui.measureText(item._label));
 
@@ -129,23 +156,32 @@ void Menu::render(UIRenderer& ui, const Theme& theme,
 
     float cursorY = panelY + padding;
 
-    ui.drawTitleCentered(title, cx, cursorY, theme.accent());
+    ui.drawTitleCentered(title, cx, cursorY, theme.foreground());
     cursorY += titleH + gap;
 
-    for (const auto& t : infoTexts) {
-        Vec3 color = (_state == State::GameOver) ? theme.muted() : theme.foreground();
-        ui.drawTextCentered(t, cx, cursorY, color);
+    for (const auto& entry : infoTexts) {
+        ui.drawTextCentered(entry.first, cx, cursorY, entry.second);
         cursorY += infoLH;
     }
     if (infoCount > 0) cursorY += gap;
 
+    float barGap = spacing * 1.5f;
+
     for (int i = 0; i < itemCount; ++i) {
-        Vec3 color = (i == _selected) ? theme.accent() : theme.foreground();
+        bool selected = (i == _selected);
+
+        if (selected) {
+            float labelW = ui.measureText(items[i]._label);
+            float arrowW = ui.measureText(">");
+            float arrowX = cx - labelW * 0.5f - barGap - arrowW;
+            ui.drawText(">", arrowX, cursorY, theme.accent());
+        }
+
+        Vec3 color = selected ? theme.accent() : theme.foreground();
         ui.drawTextCentered(items[i]._label, cx, cursorY, color);
         cursorY += itemLH;
     }
 
-    if (ui.hintVisible())
-        ui.drawTextCentered("UP/DOWN to select  -  ENTER to confirm",
-                            cx, screenH - padding * 2.5f, theme.muted());
+    ui.drawHint("UP/DOWN to select  -  ENTER to confirm",
+                cx, screenH - padding * 2.5f, theme.muted());
 }

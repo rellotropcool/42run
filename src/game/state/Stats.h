@@ -8,16 +8,18 @@ class Stats {
         int _gamesPlayed   = 0;
         int _bestDistance  = 0;
         int _totalDistance = 0;
+        int _totalCoins    = 0;
 
     public:
         static Stats load(const std::string& path);
 
-        void recordGame(int distance);
+        void recordGame(int distance, int coins);
         void save(const std::string& path) const;
 
         int gamesPlayed()   const;
         int bestDistance()  const;
         int totalDistance() const;
+        int totalCoins()    const;
 };
 
 #endif

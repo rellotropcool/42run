@@ -1,4 +1,4 @@
-#include "game/Entity.h"
+#include "game/actors/Entity.h"
 
 #include "gfx/Mesh.h"
 

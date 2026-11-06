@@ -5,7 +5,6 @@
 #include <glad/glad.h>
 
 #include <algorithm>
-#include <cmath>
 #include <cstddef>
 
 UIRenderer::UIRenderer(const Font& bodyFont, const Font& titleFont)
@@ -34,7 +33,7 @@ UIRenderer::UIRenderer(const Font& bodyFont, const Font& titleFont)
     _titleVao.addVertexBuffer(_titleVbo, layout);
 }
 
-void UIRenderer::beginFrame(float screenW, float screenH, float time) {
+void UIRenderer::beginFrame(float screenW, float screenH) {
     _screenW = screenW;
     _screenH = screenH;
     _bgVertices.clear();
@@ -43,11 +42,14 @@ void UIRenderer::beginFrame(float screenW, float screenH, float time) {
     _rectVertices.clear();
     _textVertices.clear();
     _titleVertices.clear();
+}
 
-    float wobble = 0.5f + 0.5f * std::sin(time * 9.0f) * std::sin(time * 5.7f);
-    _flicker = 0.92f + 0.06f * wobble;
+void UIRenderer::setFlicker(float flicker) {
+    _flicker = flicker;
+}
 
-    _hintVisible = (std::fmod(time, 1.2f) < 0.6f);
+void UIRenderer::setHintVisible(bool visible) {
+    _hintVisible = visible;
 }
 
 void UIRenderer::drawBackground(const Texture& texture) {
@@ -141,22 +143,22 @@ void UIRenderer::drawRect(float x, float y, float w, float h,
 
 void UIRenderer::batchGlyphs(const std::string& text, float x, float y,
                              const Vec3& color, const Font& font,
-                             std::vector<Vertex>& out) {
+                             std::vector<Vertex>& out, float scale) {
     float penX      = x;
-    float baselineY = y + font.ascent();
+    float baselineY = y + font.ascent() * scale;
 
     for (char c : text) {
         const Font::Glyph& g = font.glyph(c);
 
         if (g.xoff2 <= g.xoff || g.yoff2 <= g.yoff) {
-            penX += g.advance;
+            penX += g.advance * scale;
             continue;
         }
 
-        float gl_ = penX + g.xoff;
-        float gr_ = penX + g.xoff2;
-        float gt_ = baselineY + g.yoff;
-        float gb_ = baselineY + g.yoff2;
+        float gl_ = penX + g.xoff  * scale;
+        float gr_ = penX + g.xoff2 * scale;
+        float gt_ = baselineY + g.yoff  * scale;
+        float gb_ = baselineY + g.yoff2 * scale;
 
         float ndcL = ndcX(gl_);
         float ndcR = ndcX(gr_);
@@ -175,7 +177,7 @@ void UIRenderer::batchGlyphs(const std::string& text, float x, float y,
         out.push_back(v2);
         out.push_back(v3);
 
-        penX += g.advance;
+        penX += g.advance * scale;
     }
 }
 
@@ -201,6 +203,26 @@ void UIRenderer::drawTitleCentered(const std::string& text, float centerX, float
     drawTitle(text, centerX - w * 0.5f, y, color);
 }
 
+void UIRenderer::drawTitleCenteredScaled(const std::string& text,
+                                         float centerX, float centerY,
+                                         const Vec3& color, float scale) {
+    float fontH = (_titleFont.ascent() + _titleFont.descent()) * scale;
+    float topY  = centerY - fontH * 0.5f;
+
+    float baseWidth   = _titleFont.measureText(text);
+    float scaledWidth = baseWidth * scale;
+    float startX      = centerX - scaledWidth * 0.5f;
+
+    batchGlyphs(text, startX, topY, color, _titleFont, _titleVertices, scale);
+}
+
+void UIRenderer::drawHint(const std::string& text, float centerX, float y,
+                          const Vec3& color) {
+    if (!_hintVisible)
+        return;
+    drawTextCentered(text, centerX, y, color);
+}
+
 float UIRenderer::measureText(const std::string& text) const {
     return _bodyFont.measureText(text);
 }
@@ -209,7 +231,9 @@ float UIRenderer::measureTitle(const std::string& text) const {
     return _titleFont.measureText(text);
 }
 
-bool UIRenderer::hintVisible() const { return _hintVisible; }
+float UIRenderer::measureTitleHeight() const {
+    return _titleFont.ascent() + _titleFont.descent();
+}
 
 void UIRenderer::drawBatch(Buffer& vbo, VertexArray& vao,
                            const std::vector<Vertex>& verts,

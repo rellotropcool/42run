@@ -1,7 +1,7 @@
 #include "core/Application.h"
 
-#include "game/GameRules.h"
-#include "game/Theme.h"
+#include "game/state/GameRules.h"
+#include "game/state/Theme.h"
 #include "gfx/Mesh.h"
 #include "gfx/ObjLoader.h"
 #include "gfx/VertexArray.h"

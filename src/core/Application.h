@@ -3,13 +3,16 @@
 
 #include "core/Input.h"
 #include "core/Window.h"
-#include "game/Entity.h"
-#include "game/GameRules.h"
-#include "game/Ground.h"
-#include "game/ObstacleSpawner.h"
-#include "game/Player.h"
-#include "game/Stats.h"
-#include "game/Theme.h"
+#include "game/actors/Entity.h"
+#include "game/actors/Player.h"
+#include "game/spawn/CoinSpawner.h"
+#include "game/spawn/ObstacleSpawner.h"
+#include "game/spawn/PowerupSpawner.h"
+#include "game/state/GameRules.h"
+#include "game/state/Stats.h"
+#include "game/state/Theme.h"
+#include "game/state/UserProfile.h"
+#include "game/world/Ground.h"
 #include "gfx/Camera.h"
 #include "gfx/Font.h"
 #include "gfx/Shader.h"
@@ -17,6 +20,7 @@
 #include "math/Mat4.h"
 #include "math/Vec3.h"
 #include "ui/Menu.h"
+#include "ui/Shop.h"
 #include "ui/UIRenderer.h"
 
 #include <vector>
@@ -33,16 +37,22 @@ class Application {
         GameRules           _rules;
         Theme               _theme;
         Stats               _stats;
+        UserProfile         _userProfile;
         Font                _font;
         Font                _titleFont;
         Texture             _backgroundTexture;
-        bool                _hasBackground = false;
+        bool                _hasBackground   = false;
         Player              _player;
         ObstacleSpawner     _obstacles;
+        CoinSpawner         _coins;
+        PowerupSpawner      _powerups;
         Menu                _menu;
+        Shop                _shop;
         UIRenderer          _ui;
         std::vector<Entity> _entities;
-        float               _elapsed = 0.0f;
+        float               _elapsed         = 0.0f;
+        bool                _newRecord       = false;
+        float               _resumeCountdown = 0.0f;
 
     public:
         Application(const GameRules& rules, const Theme& theme);
@@ -61,6 +71,7 @@ class Application {
     private:
         void update(float dt);
         void render();
+        void drawCountdown(float screenW, float screenH);
         void resetWorld();
         void drawEntity(const Entity& entity, const Mat4& viewProj);
         bool collides(const Player& player, const Obstacle& obs) const;

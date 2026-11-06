@@ -1,7 +1,7 @@
 #ifndef OBSTACLESPAWNER_H
 #define OBSTACLESPAWNER_H
 
-#include "game/Obstacle.h"
+#include "game/actors/Obstacle.h"
 
 #include <string>
 #include <vector>
@@ -13,7 +13,7 @@ class ObstacleSpawner {
     private:
         struct Placement {
             int          lane;
-            ObstacleType type;
+            ObstacleType obsType;
             int          zSlot;
         };
         struct Chunk {
@@ -39,6 +39,8 @@ class ObstacleSpawner {
         void reset();
 
         const std::vector<Obstacle>& obstacles() const;
+
+        void removeObstacle(std::size_t index);
 
     private:
         const Chunk& pickChunk() const;

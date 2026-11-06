@@ -1,7 +1,7 @@
 #ifndef OBSTACLE_H
 #define OBSTACLE_H
 
-#include "game/Entity.h"
+#include "game/actors/Entity.h"
 
 enum class ObstacleType {
     Full,

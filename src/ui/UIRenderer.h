@@ -69,8 +69,11 @@ class UIRenderer {
         UIRenderer(const UIRenderer&)            = delete;
         UIRenderer& operator=(const UIRenderer&) = delete;
 
-        void beginFrame(float screenW, float screenH, float time);
+        void beginFrame(float screenW, float screenH);
         void endFrame();
+
+        void setFlicker(float flicker);
+        void setHintVisible(bool visible);
 
         void drawBackground(const Texture& texture);
 
@@ -81,14 +84,17 @@ class UIRenderer {
 
         void drawRect(float x, float y, float w, float h, const Vec3& color);
 
-        void drawText         (const std::string& text, float x, float y, const Vec3& color);
-        void drawTextCentered (const std::string& text, float centerX, float y, const Vec3& color);
-        void drawTitle        (const std::string& text, float x, float y, const Vec3& color);
-        void drawTitleCentered(const std::string& text, float centerX, float y, const Vec3& color);
+        void drawText            (const std::string& text, float x, float y, const Vec3& color);
+        void drawTextCentered    (const std::string& text, float centerX, float y, const Vec3& color);
+        void drawTitle           (const std::string& text, float x, float y, const Vec3& color);
+        void drawTitleCentered   (const std::string& text, float centerX, float y, const Vec3& color);
+        void drawTitleCenteredScaled(const std::string& text, float centerX, float centerY,
+                                      const Vec3& color, float scale);
+        void drawHint            (const std::string& text, float centerX, float y, const Vec3& color);
 
-        float measureText (const std::string& text) const;
-        float measureTitle(const std::string& text) const;
-        bool  hintVisible() const;
+        float measureText       (const std::string& text) const;
+        float measureTitle      (const std::string& text) const;
+        float measureTitleHeight() const;
 
     private:
         float ndcX(float px) const;
@@ -96,7 +102,7 @@ class UIRenderer {
 
         void batchGlyphs(const std::string& text, float x, float y,
                          const Vec3& color, const Font& font,
-                         std::vector<Vertex>& out);
+                         std::vector<Vertex>& out, float scale = 1.0f);
 
         static void drawBatch(Buffer& vbo, VertexArray& vao,
                               const std::vector<Vertex>& verts,

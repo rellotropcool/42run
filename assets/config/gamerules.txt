@@ -20,5 +20,22 @@ slideDuration   = 0.5
 
 # --- Obstacle spawning ----------------------------------------------
 
-warmupDistance  = 30.0
+warmupDistance  = 60.0
 slotSpacing     = 16.0
+
+# --- Coins ----------------------------------------------------------
+
+coinInterval    = 4
+
+# --- Powerups -------------------------------------------------------
+
+powerupInterval     = 250.0
+powerupJitter       = 20.0
+powerupBaseDuration = 10.0
+powerupUpgradeStep  = 0.25
+
+# --- Shop -----------------------------------------------------------
+
+upgradeBaseCost     = 50
+upgradeCostStep     = 25
+upgradeMaxLevel     = 5
