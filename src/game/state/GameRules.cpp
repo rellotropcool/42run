@@ -84,6 +84,7 @@ GameRules GameRules::load(const std::string& path) {
         else if (key == "upgradeBaseCost")     rules._upgradeBaseCost     = parseInt(valueStr, key, lineNum);
         else if (key == "upgradeCostStep")     rules._upgradeCostStep     = parseInt(valueStr, key, lineNum);
         else if (key == "upgradeMaxLevel")     rules._upgradeMaxLevel     = parseInt(valueStr, key, lineNum);
+        else if (key == "soundPack")           rules._soundPack           = valueStr;
         else
             throw std::runtime_error("GameRules: unknown key '" + key +
                                      "' on line " + std::to_string(lineNum));
@@ -108,3 +109,5 @@ float GameRules::powerupUpgradeStep()  const { return _powerupUpgradeStep; }
 int   GameRules::upgradeBaseCost()     const { return _upgradeBaseCost; }
 int   GameRules::upgradeCostStep()     const { return _upgradeCostStep; }
 int   GameRules::upgradeMaxLevel()     const { return _upgradeMaxLevel; }
+
+const std::string& GameRules::soundPack() const { return _soundPack; }

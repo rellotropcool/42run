@@ -1,6 +1,7 @@
 #ifndef APPLICATION_H
 #define APPLICATION_H
 
+#include "core/Audio.h"
 #include "core/Input.h"
 #include "core/Window.h"
 #include "game/actors/Entity.h"
@@ -30,6 +31,7 @@ class Mesh;
 class Application {
     private:
         Window              _window;
+        Audio               _audio;
         Input               _input;
         Shader              _shader;
         Ground              _ground;

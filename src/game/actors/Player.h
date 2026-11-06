@@ -8,6 +8,12 @@ class GameRules;
 class Input;
 
 class Player : public Entity {
+    public:
+        struct UpdateEvents {
+            bool jumped = false;
+            bool landed = false;
+        };
+
     private:
         static constexpr int _laneCount = 3;
 
@@ -27,7 +33,7 @@ class Player : public Entity {
         Player() = default;
 
         void setRules(const GameRules& rules);
-        void update(float dt, const Input& input);
+        UpdateEvents update(float dt, const Input& input);
         void reset();
 
         int   lane()             const;

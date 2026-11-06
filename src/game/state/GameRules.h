@@ -22,6 +22,8 @@ class GameRules {
         int   _upgradeCostStep     = 25;
         int   _upgradeMaxLevel     = 5;
 
+        std::string _soundPack = "default";
+
     public:
         static GameRules load(const std::string& path);
 
@@ -41,6 +43,8 @@ class GameRules {
         int   upgradeBaseCost()     const;
         int   upgradeCostStep()     const;
         int   upgradeMaxLevel()     const;
+
+        const std::string& soundPack() const;
 };
 
 #endif

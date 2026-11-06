@@ -39,6 +39,14 @@ Application::Application(const GameRules& rules, const Theme& theme)
     glEnable(GL_DEPTH_TEST);
     _player.setRules(_rules);
 
+    const std::string audioBase = "assets/audio/" + _rules.soundPack() + "/";
+
+    _audio.load(Audio::Sound::Jump,    audioBase + "jump.wav");
+    _audio.load(Audio::Sound::Land,    audioBase + "land.wav");
+    _audio.load(Audio::Sound::Coin,    audioBase + "coin.wav");
+    _audio.load(Audio::Sound::Powerup, audioBase + "powerup.wav");
+    _audio.load(Audio::Sound::Hit,     audioBase + "hit.wav");
+
     if (!_theme.backgroundImage().empty()) {
         std::string path = _theme.resolveBackgroundPath();
         ImageData   img  = Image::load(path);
@@ -136,6 +144,7 @@ void Application::update(float dt) {
         case Menu::Action::Play:
             resetWorld();
             _menu.setState(Menu::State::Playing);
+            _audio.startAmbient("assets/audio/" + _rules.soundPack() + "/ambient.wav");
             break;
         case Menu::Action::Resume:
             _menu.setState(Menu::State::Playing);
@@ -168,7 +177,13 @@ void Application::update(float dt) {
         return;
     }
 
-    _player.update(dt, _input);
+    Player::UpdateEvents ev = _player.update(dt, _input);
+
+    if (ev.jumped)
+        _audio.play(Audio::Sound::Jump);
+    if (ev.landed)
+        _audio.play(Audio::Sound::Land);
+
     _obstacles.update(_player.position().z());
     _coins.update(_player.position().z(), dt, _obstacles.obstacles());
     _powerups.update(_player.position().z(), dt, _obstacles.obstacles());
@@ -189,6 +204,7 @@ void Application::update(float dt) {
         if (near) {
             _player.addCoins(_player.hasDoubleCoins() ? 2 : 1);
             _coins.removeCoin(i);
+            _audio.play(Audio::Sound::Coin);
         } else {
             ++i;
         }
@@ -209,6 +225,7 @@ void Application::update(float dt) {
                 _rules.powerupUpgradeStep());
             _player.activatePowerup(p.type(), duration);
             _powerups.removePickup(i);
+            _audio.play(Audio::Sound::Powerup);
         } else {
             ++i;
         }
@@ -218,6 +235,7 @@ void Application::update(float dt) {
         if (collides(_player, _obstacles.obstacles()[i])) {
             if (_player.consumeShield()) {
                 _obstacles.removeObstacle(i);
+                _audio.play(Audio::Sound::Hit);
                 break;
             }
 
@@ -233,6 +251,8 @@ void Application::update(float dt) {
 
             _newRecord = (distance > previousBest);
             _menu.setState(Menu::State::GameOver);
+            _audio.play(Audio::Sound::Hit);
+            _audio.stopAmbient();
             break;
         }
     }

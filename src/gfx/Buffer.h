@@ -27,4 +27,5 @@ class Buffer {
         GLsizeiptr size()   const;
 };
 
+
 #endif

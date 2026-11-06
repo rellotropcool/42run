@@ -39,3 +39,7 @@ powerupUpgradeStep  = 0.25
 upgradeBaseCost     = 50
 upgradeCostStep     = 25
 upgradeMaxLevel     = 5
+
+# --- Sound pack -----------------------------------------------------
+
+soundPack = rello

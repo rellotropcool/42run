@@ -11,9 +11,13 @@ void Player::setRules(const GameRules& rules) {
     _rules = &rules;
 }
 
-void Player::update(float dt, const Input& input) {
+Player::UpdateEvents Player::update(float dt, const Input& input) {
+    UpdateEvents events;
+
     if (!_rules)
-        return;
+        return events;
+
+    bool wasOnGround = _onGround;
 
     _magnetTimer      = std::max(0.0f, _magnetTimer      - dt);
     _shieldTimer      = std::max(0.0f, _shieldTimer      - dt);
@@ -36,10 +40,11 @@ void Player::update(float dt, const Input& input) {
     if ((input.wasPressed(GLFW_KEY_SPACE) ||
          input.wasPressed(GLFW_KEY_W) ||
          input.wasPressed(GLFW_KEY_UP)) && _onGround) {
-        _sliding    = false;
-        _slideTimer = 0.0f;
-        _vy         = _rules->jumpVelocity();
-        _onGround   = false;
+        _sliding      = false;
+        _slideTimer   = 0.0f;
+        _vy           = _rules->jumpVelocity();
+        _onGround     = false;
+        events.jumped = true;
     }
 
     if (_sliding) {
@@ -58,6 +63,9 @@ void Player::update(float dt, const Input& input) {
         _onGround   = true;
     }
 
+    if (!wasOnGround && _onGround)
+        events.landed = true;
+
     if (_sliding)
         setScale(Vec3(1.0f, 0.5f, 1.0f));
     else
@@ -73,6 +81,8 @@ void Player::update(float dt, const Input& input) {
     float z       = current.z() - _rules->forwardSpeed() * dt;
 
     setPosition(Vec3(x, y, z));
+
+    return events;
 }
 
 void Player::reset() {

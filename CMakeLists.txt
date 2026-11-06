@@ -37,6 +37,9 @@ add_subdirectory(third_party/glfw)
 add_library(glad STATIC third_party/glad/src/glad.c)
 target_include_directories(glad PUBLIC third_party/glad/include)
 
+# System threading library (used by miniaudio's mixing thread).
+find_package(Threads REQUIRED)
+
 # ---------------------------------------------------------------------------
 # Project target
 # ---------------------------------------------------------------------------
@@ -49,12 +52,15 @@ add_executable(42run ${PROJECT_SOURCES})
 target_include_directories(42run PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
     "${CMAKE_CURRENT_SOURCE_DIR}/third_party/stb"
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/miniaudio"
 )
 
 target_link_libraries(42run PRIVATE
     glfw
     glad
     ${CMAKE_DL_LIBS}
+    Threads::Threads
+    m
 )
 
 # ---------------------------------------------------------------------------
