@@ -4,3 +4,4 @@ compile_commands.json
 save/stats.txt
 *.swp
 .DS_Store
+save/user.txt
